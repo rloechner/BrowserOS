@@ -311,6 +311,15 @@ features:
       - chrome/browser/ui/tabs/vertical_tab_strip_state_controller.cc
       - chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
 
+  stacker-universe:
+    description: "feat: stacker universe window grouping"
+    files:
+      - chrome/browser/browseros/universe/
+      - chrome/browser/ui/views/frame/horizontal_tab_strip_region_view.cc
+      - chrome/browser/ui/views/frame/horizontal_tab_strip_region_view.h
+      - chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
+      - chrome/browser/ui/views/frame/vertical_tab_strip_region_view.h
+
   chromium-urls:
     description: "feat: chromium urls for browseros"
     files:
