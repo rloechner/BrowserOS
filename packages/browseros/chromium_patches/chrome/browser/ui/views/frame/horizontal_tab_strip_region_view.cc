@@ -20,5 +20,16 @@ index 2af9ca18b6b2a..ba9ad3ef5b38f 100644
 +  universe_button_->SetProperty(views::kCrossAxisAlignmentKey,
 +                                views::LayoutAlignment::kCenter);
  
-   if (browser &&
-       (browser->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL) &&
+  if (browser &&
+      (browser->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL) &&
+@@ -437,6 +443,10 @@ views::View::Views HorizontalTabStripRegionView::GetChildrenInZOrder() {
+     children.emplace_back(combo_button_.get());
+   }
+ 
++  if (universe_button_) {
++    children.emplace_back(universe_button_.get());
++  }
++
+   if (unfocus_button_) {
+     children.emplace_back(unfocus_button_.get());
+   }
