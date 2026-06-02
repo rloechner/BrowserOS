@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000000000..0000000000000
 --- /dev/null
 +++ b/chrome/browser/browseros/universe/stacker_universe_ui.h
-@@ -0,0 +1,175 @@
+@@ -0,0 +1,181 @@
 +// Copyright 2026 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -27,6 +27,7 @@ index 0000000000000..0000000000000
 +#include "ui/base/base_window.h"
 +#include "ui/base/models/dialog_model.h"
 +#include "ui/base/models/image_model.h"
++#include "ui/views/accessibility/view_accessibility.h"
 +#include "ui/views/bubble/bubble_dialog_delegate_view.h"
 +#include "ui/views/bubble/bubble_dialog_model_host.h"
 +#include "ui/views/controls/button/label_button.h"
@@ -149,6 +150,11 @@ index 0000000000000..0000000000000
 +}
 +
 +}  // namespace internal
++
++inline void ShowStackerUniversePanel(views::View* anchor,
++                                     BrowserWindowInterface* browser_window) {
++  internal::ShowStackerUniversePanel(anchor, browser_window);
++}
 +
 +class StackerUniverseButton : public views::LabelButton {
 + public:

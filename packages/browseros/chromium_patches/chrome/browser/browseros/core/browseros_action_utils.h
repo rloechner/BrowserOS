@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000000000..f7e801d662789
 --- /dev/null
 +++ b/chrome/browser/browseros/core/browseros_action_utils.h
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,71 @@
 +// Copyright 2025 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -34,6 +34,7 @@ index 0000000000000..f7e801d662789
 +        kActionSidePanelShowThirdPartyLlm,
 +        kActionSidePanelShowClashOfGpts,
 +        kActionBrowserOSAgent,
++        kActionBrowserOSStackerUniverse,
 +    });
 +
 +// Check if an action ID is a BrowserOS action (native or extension).

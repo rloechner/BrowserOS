@@ -10,11 +10,12 @@ index 8a43e7c2fcde5..95eff82226b48 100644
  #include "chrome/app/vector_icons/vector_icons.h"
  #include "chrome/browser/contextual_tasks/contextual_tasks_side_panel_coordinator.h"
  #include "chrome/browser/devtools/devtools_window.h"
-@@ -31,7 +32,14 @@
+@@ -31,7 +32,15 @@
  #include "chrome/browser/sharing_hub/sharing_hub_features.h"
  #include "chrome/browser/ui/actions/chrome_action_id.h"
  #include "chrome/browser/ui/actions/chrome_actions.h"
 +#include "chrome/browser/browseros/core/browseros_constants.h"
++#include "chrome/browser/browseros/universe/stacker_universe_ui.h"
 +#include "chrome/browser/extensions/api/side_panel/side_panel_service.h"
 +#include "chrome/browser/extensions/extension_tab_util.h"
 +#include "chrome/browser/infobars/simple_alert_infobar_creator.h"
@@ -25,7 +26,7 @@ index 8a43e7c2fcde5..95eff82226b48 100644
  #include "chrome/browser/ui/autofill/address_bubbles_icon_controller.h"
  #include "chrome/browser/ui/autofill/autofill_bubble_base.h"
  #include "chrome/browser/ui/autofill/payments/filled_card_information_bubble_controller_impl.h"
-@@ -310,6 +318,110 @@ void BrowserActions::InitializeSidePanelActions() {
+@@ -310,6 +319,137 @@ void BrowserActions::InitializeSidePanelActions() {
              .Build());
    }
  
@@ -127,6 +128,33 @@ index 8a43e7c2fcde5..95eff82226b48 100644
 +          .SetActionId(kActionBrowserOSAgent)
 +          .SetText(u"Assistant")
 +          .SetTooltipText(u"Ask BrowserOS")
++          .SetImage(ui::ImageModel::FromResourceId(IDR_PRODUCT_LOGO_16))
++          .SetProperty(actions::kActionItemPinnableKey,
++                       std::underlying_type_t<actions::ActionPinnableState>(
++                           actions::ActionPinnableState::kEnterpriseControlled))
++          .Build());
++
++  // Stacker Universe - groups BrowserOS windows/profiles into a managed
++  // universe. Keep this in the BrowserOS toolbar action surface instead of the
++  // tab strip while the MVP model is settling.
++  root_action_item_->AddChild(
++      actions::ActionItem::Builder(
++          base::BindRepeating(
++              [](BrowserWindowInterface* bwi, actions::ActionItem* item,
++                 actions::ActionInvocationContext context) {
++                BrowserView* browser_view =
++                    BrowserView::GetBrowserViewForBrowser(bwi);
++                if (!browser_view) {
++                  LOG(WARNING)
++                      << "browseros: BrowserView not found for Universe action";
++                  return;
++                }
++                browseros::universe::ShowStackerUniversePanel(browser_view, bwi);
++              },
++              bwi))
++          .SetActionId(kActionBrowserOSStackerUniverse)
++          .SetText(u"Universe")
++          .SetTooltipText(u"Stacker Universe")
 +          .SetImage(ui::ImageModel::FromResourceId(IDR_PRODUCT_LOGO_16))
 +          .SetProperty(actions::kActionItemPinnableKey,
 +                       std::underlying_type_t<actions::ActionPinnableState>(
