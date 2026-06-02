@@ -1,9 +1,9 @@
 diff --git a/chrome/browser/browseros/universe/stacker_universe_ui.h b/chrome/browser/browseros/universe/stacker_universe_ui.h
 new file mode 100644
-index 0000000000000..0000000000000
+index 00000000..481d934c
 --- /dev/null
 +++ b/chrome/browser/browseros/universe/stacker_universe_ui.h
-@@ -0,0 +1,181 @@
+@@ -0,0 +1,216 @@
 +// Copyright 2026 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -25,12 +25,17 @@ index 0000000000000..0000000000000
 +#include "chrome/browser/ui/tabs/tab_strip_model.h"
 +#include "content/public/browser/web_contents.h"
 +#include "ui/base/base_window.h"
-+#include "ui/base/models/dialog_model.h"
 +#include "ui/base/models/image_model.h"
++#include "ui/base/mojom/dialog_button.mojom.h"
 +#include "ui/views/accessibility/view_accessibility.h"
++#include "ui/views/border.h"
 +#include "ui/views/bubble/bubble_dialog_delegate_view.h"
-+#include "ui/views/bubble/bubble_dialog_model_host.h"
 +#include "ui/views/controls/button/label_button.h"
++#include "ui/views/controls/button/md_text_button.h"
++#include "ui/views/controls/label.h"
++#include "ui/views/controls/separator.h"
++#include "ui/views/layout/box_layout.h"
++#include "ui/views/layout/layout_provider.h"
 +#include "ui/views/view.h"
 +#include "ui/views/widget/widget.h"
 +
@@ -76,7 +81,7 @@ index 0000000000000..0000000000000
 +  return base::UTF8ToUTF16(profile->GetDebugName());
 +}
 +
-+inline void ActivateWindow(int window_id, int event_flags) {
++inline void ActivateWindow(int window_id) {
 +  BrowserWindowInterface* browser_window = FindBrowserWindow(window_id);
 +  if (browser_window && browser_window->GetWindow()) {
 +    browser_window->GetWindow()->Activate();
@@ -103,49 +108,79 @@ index 0000000000000..0000000000000
 +                       ProfileName(browser_window)});
 +}
 +
-+inline std::unique_ptr<ui::DialogModel> CreateStackerUniverseDialogModel(
++inline std::unique_ptr<views::View> CreateStackerUniverseContents(
 +    BrowserWindowInterface* browser_window) {
-+  const int current_window_id = WindowIdFor(browser_window);
-+  ui::DialogModel::Builder builder;
-+  builder.SetInternalName("StackerUniverse")
-+      .SetTitle(u"Stacker Universe")
-+      .OverrideShowCloseButton(true)
-+      .AddParagraph(ui::DialogModelLabel(
-+          u"MVP universe controls for the current BrowserOS windows and "
-+          u"profiles."));
++  const int browser_window_id = WindowIdFor(browser_window);
++  const int margin = views::LayoutProvider::Get()->GetDistanceMetric(
++      views::DISTANCE_BUTTON_HORIZONTAL_PADDING);
 +
-+  if (current_window_id >= 0) {
-+    builder.AddOkButton(
-+        base::BindOnce(&RestoreWindow, current_window_id),
-+        ui::DialogModel::Button::Params().SetLabel(u"Restore current"));
-+    builder.AddCancelButton(
-+        base::BindOnce(&MinimizeWindow, current_window_id),
-+        ui::DialogModel::Button::Params().SetLabel(u"Collapse current"));
++  auto contents = std::make_unique<views::View>();
++  contents->SetBorder(views::CreateEmptyBorder(gfx::Insets::VH(margin / 2, 0)));
++  contents->SetLayoutManager(std::make_unique<views::BoxLayout>(
++      views::BoxLayout::Orientation::kVertical));
++
++  auto* description = contents->AddChildView(std::make_unique<views::Label>(
++        u"MVP controls for BrowserOS windows and profiles.",
++        views::style::CONTEXT_LABEL, views::style::STYLE_SECONDARY));
++  description->SetMultiLine(true);
++  description->SetHorizontalAlignment(gfx::ALIGN_LEFT);
++  description->SetBorder(
++      views::CreateEmptyBorder(gfx::Insets::TLBR(0, margin, margin, margin)));
++
++  if (browser_window_id >= 0) {
++    auto* controls = contents->AddChildView(std::make_unique<views::View>());
++    controls->SetLayoutManager(std::make_unique<views::BoxLayout>(
++        views::BoxLayout::Orientation::kHorizontal));
++    controls->SetBorder(
++        views::CreateEmptyBorder(gfx::Insets::TLBR(0, margin, margin, margin)));
++
++    controls->AddChildView(std::make_unique<views::MdTextButton>(
++        base::BindRepeating(&RestoreWindow, browser_window_id),
++        u"Restore"));
++    controls->AddChildView(std::make_unique<views::MdTextButton>(
++        base::BindRepeating(&MinimizeWindow, browser_window_id),
++        u"Collapse"));
 +  }
++
++  contents->AddChildView(std::make_unique<views::Separator>());
 +
 +  bool has_windows = false;
 +  ForEachCurrentBrowserWindowInterfaceOrderedByActivation(
-+      [&builder, &has_windows](BrowserWindowInterface* open_browser_window) {
++      [&contents, margin, &has_windows](
++          BrowserWindowInterface* open_browser_window) {
 +        has_windows = true;
-+        builder.AddMenuItem(
-+            ui::ImageModel(), WindowMenuLabel(open_browser_window),
-+            base::BindRepeating(&ActivateWindow,
-+                                WindowIdFor(open_browser_window)));
++        auto* button = contents->AddChildView(
++            std::make_unique<views::MdTextButton>(
++                base::BindRepeating(&ActivateWindow,
++                                    WindowIdFor(open_browser_window)),
++                WindowMenuLabel(open_browser_window)));
++        button->SetHorizontalAlignment(gfx::ALIGN_LEFT);
++        button->SetBorder(
++            views::CreateEmptyBorder(gfx::Insets::VH(margin / 2, margin)));
 +        return true;
 +      });
 +
 +  if (!has_windows) {
-+    builder.AddParagraph(ui::DialogModelLabel(u"No BrowserOS windows found."));
++    auto* empty = contents->AddChildView(std::make_unique<views::Label>(
++        u"No BrowserOS windows found.", views::style::CONTEXT_LABEL,
++        views::style::STYLE_SECONDARY));
++    empty->SetHorizontalAlignment(gfx::ALIGN_LEFT);
++    empty->SetBorder(
++        views::CreateEmptyBorder(gfx::Insets::VH(margin / 2, margin)));
 +  }
 +
-+  return builder.Build();
++  return contents;
 +}
 +
 +inline void ShowStackerUniversePanel(views::View* anchor,
 +                                     BrowserWindowInterface* browser_window) {
-+  auto bubble = std::make_unique<views::BubbleDialogModelHost>(
-+      CreateStackerUniverseDialogModel(browser_window), anchor,
-+      views::BubbleBorder::TOP_LEFT);
++  auto bubble = std::make_unique<views::BubbleDialogDelegate>(
++      anchor, views::BubbleBorder::TOP_RIGHT);
++  bubble->SetButtons(static_cast<int>(ui::mojom::DialogButton::kNone));
++  bubble->SetShowCloseButton(true);
++  bubble->SetTitle(u"Stacker Universe");
++  bubble->set_fixed_width(320);
++  bubble->SetContentsView(CreateStackerUniverseContents(browser_window));
 +  views::BubbleDialogDelegate::CreateBubble(std::move(bubble))->Show();
 +}
 +
